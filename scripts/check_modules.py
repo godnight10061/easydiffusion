@@ -17,6 +17,20 @@ from pathlib import Path
 from pprint import pprint
 import re
 
+try:
+    from packaging.version import Version, InvalidVersion
+except ImportError:  # pragma: no cover
+    from pip._vendor.packaging.version import Version, InvalidVersion
+
+
+def parse_version(v):
+    try:
+        return Version(str(v) if v is not None else "0")
+    except InvalidVersion:
+        cleaned = str(v).split("+", 1)[0]
+        cleaned = re.sub(r"[^0-9A-Za-z.]+", ".", cleaned).strip(".")
+        return Version(cleaned or "0")
+
 os_name = platform.system()
 
 modules_to_check = {
@@ -105,10 +119,10 @@ def update_modules():
         torchruntime.install(["torch", "torchvision"])
     else:
         torch_version_str = version("torch")
-        torch_version = version_str_to_tuple(torch_version_str)
+        torch_version = parse_version(torch_version_str)
         is_cpu_torch = "+" not in torch_version_str
         print(f"Current torch version: {torch_version} ({torch_version_str})")
-        if torch_version < (2, 7) or is_cpu_torch:
+        if torch_version < parse_version("2.7") or is_cpu_torch:
             from torchruntime.device_db import get_gpus
 
             gpu_infos = get_gpus()
@@ -170,10 +184,10 @@ def update_modules():
         _install("sdkit", expected_sdkit_version_str)
         _install("diffusers", expected_diffusers_version_str)
     else:
-        sdkit_version = version_str_to_tuple(sdkit_version_str)
-        legacy_sdkit_version = version_str_to_tuple(legacy_sdkit_version_str)
+        sdkit_version = parse_version(sdkit_version_str)
+        legacy_sdkit_version = parse_version(legacy_sdkit_version_str)
 
-        if sdkit_version[:3] <= legacy_sdkit_version[:3]:
+        if sdkit_version.release[:3] <= legacy_sdkit_version.release[:3]:
             # stick to diffusers 0.21.4, since it preserves torch 0.11+ compatibility.
             # upgrading beyond this will result in a 2+ GB download of torch on older installations
             #  and a time-consuming chain of small package updates due to huggingface_hub upgrade.
@@ -182,8 +196,8 @@ def update_modules():
             install_pkg_if_necessary("sdkit", legacy_sdkit_version_str)
             install_pkg_if_necessary("diffusers", legacy_diffusers_version_str)
         else:
-            torch_version = version_str_to_tuple(version("torch"))
-            if torch_version < (1, 13):
+            torch_version = parse_version(version("torch"))
+            if torch_version < parse_version("1.13"):
                 # install the gpu-compatible torch (if necessary), instead of the default CPU-only one
                 # from the diffusers dependency chain
                 torchruntime.install(["--upgrade", "torch", "torchvision"])
@@ -192,13 +206,12 @@ def update_modules():
             install_pkg_if_necessary("diffusers", expected_diffusers_version_str)
 
     # hotfix accelerate
-    accelerate_version = version("accelerate")
-    if accelerate_version is None:
+    accelerate_version_str = version("accelerate")
+    if accelerate_version_str is None:
         install("accelerate", "0.23.0")
     else:
-        accelerate_version = accelerate_version.split(".")
-        accelerate_version = tuple(map(int, accelerate_version))
-        if accelerate_version < (0, 23):
+        accelerate_version = parse_version(accelerate_version_str)
+        if accelerate_version < parse_version("0.23"):
             install("accelerate", "0.23.0")
 
     # hotfix - 29 May 2024. sdkit has stopped pulling its dependencies for some reason
@@ -227,8 +240,8 @@ def update_modules():
             if curr_mod_version_str is None:
                 _install(mod_name, mod_force_version_str)
             elif mod_force_version_str is not None:
-                curr_mod_version = version_str_to_tuple(curr_mod_version_str)
-                mod_force_version = version_str_to_tuple(mod_force_version_str)
+                curr_mod_version = parse_version(curr_mod_version_str)
+                mod_force_version = parse_version(mod_force_version_str)
 
                 if curr_mod_version != mod_force_version:
                     _install(mod_name, mod_force_version_str)
@@ -255,14 +268,6 @@ def install_pkg_if_necessary(pkg_name, required_version):
     pkg_version = version(pkg_name)
     if pkg_version != required_version:
         _install(pkg_name, required_version)
-
-
-def version_str_to_tuple(ver_str):
-    ver_str = ver_str.split("+")[0]
-    ver_str = re.sub("[^0-9.]", "", ver_str)
-    ver = ver_str.split(".")
-    return tuple(map(int, ver))
-
 
 ### utilities
 def get_allowed_versions(module_name: str, allowed_versions: tuple):
