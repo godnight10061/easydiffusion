@@ -527,7 +527,7 @@
                     <div><ul>
                     <li><b class="settings-subheader">Render Settings</b></li>
                     <li class="pl-5"><input id="stream_image_progress" name="stream_image_progress" type="checkbox"> <label for="stream_image_progress">Show a live preview <small>(uses more VRAM, slower images)</small></label></li>
-                    <li class="pl-5" id="use_face_correction_container">
+                    <li class="pl-5 gated-feature" id="use_face_correction_container" data-feature-keys="backend_ed_classic backend_ed_diffusers backend_webui">
                         <input id="use_face_correction" name="use_face_correction" type="checkbox"> <label for="use_face_correction">Fix incorrect faces and eyes</label> <div style="display:inline-block;"><input id="gfpgan_model" type="text" spellcheck="false" autocomplete="off" class="model-filter" data-path="" /></div>
                         <table id="codeformer_settings" class="displayNone sub-settings">
                             <tr class="pl-5"><td><label for="codeformer_fidelity_slider">Strength:</label></td><td><input id="codeformer_fidelity_slider" name="codeformer_fidelity_slider" class="editor-slider" value="5" type="range" min="0" max="10"> <input id="codeformer_fidelity" name="codeformer_fidelity" size="4" pattern="^[0-9\.]+$" onkeypress="preventNonNumericalInput(event)" inputmode="decimal"></td></tr>

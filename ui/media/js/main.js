@@ -42,7 +42,8 @@ const taskConfigSetup = {
             label: "Negative Prompt",
             visible: ({ reqBody }) => reqBody?.negative_prompt !== undefined && reqBody?.negative_prompt.trim() !== "",
         },
-        prompt_strength: 'Prompt Strength <small>(<abbr title="Common name in other UIs">Denoising Strength</abbr>)</small>',
+        prompt_strength:
+            'Prompt Strength <small>(<abbr title="Common name in other UIs">Denoising Strength</abbr>)</small>',
         use_face_correction: "Fix Faces",
         upscale: {
             value: ({ reqBody }) => `${reqBody?.use_upscale} (${reqBody?.upscale_amount || 4}x)`,
@@ -124,7 +125,7 @@ let refImageContainer = document.querySelector("#editor-inputs-ref-images")
 let refImageSelector = document.querySelector("#ref_image_input")
 let refImagesList = document.querySelector("#ref_images_list")
 let refImagesClearAllBtn = document.querySelector("#ref_images_clear_all")
-let refImages = []  // Array of base64 data URLs for reference images
+let refImages = [] // Array of base64 data URLs for reference images
 let promptStrengthSlider = document.querySelector("#prompt_strength_slider")
 let promptStrengthField = document.querySelector("#prompt_strength")
 let samplerField = document.querySelector("#sampler_name")
@@ -132,6 +133,7 @@ let samplerSelectionContainer = document.querySelector("#samplerSelection")
 let schedulerField = document.querySelector("#scheduler_name")
 let schedulerSelectionContainer = document.querySelector("#schedulerSelection")
 let useFaceCorrectionField = document.querySelector("#use_face_correction")
+let useFaceCorrectionContainer = document.querySelector("#use_face_correction_container")
 let gfpganModelField = new ModelDropdown(document.querySelector("#gfpgan_model"), ["gfpgan", "codeformer"], "", false)
 let useUpscalingField = document.querySelector("#use_upscale")
 let upscaleModelField = document.querySelector("#upscale_model")
@@ -147,7 +149,14 @@ let tilingField = document.querySelector("#tiling")
 let controlnetModelField = new ModelDropdown(document.querySelector("#controlnet_model"), "controlnet", "None", false)
 let vaeModelField = new ModelDropdown(document.querySelector("#vae_model"), "vae", "None")
 let loraModelField = new MultiModelSelector(document.querySelector("#lora_model"), "lora", "LoRA", 0.5, 0.02)
-let textEncoderModelField = new MultiModelSelector(document.querySelector("#text_encoder_model"), "text-encoder", "Text Encoder", 0.5, 0.02, false)
+let textEncoderModelField = new MultiModelSelector(
+    document.querySelector("#text_encoder_model"),
+    "text-encoder",
+    "Text Encoder",
+    0.5,
+    0.02,
+    false
+)
 let hypernetworkModelField = new ModelDropdown(document.querySelector("#hypernetwork_model"), "hypernetwork", "None")
 let hypernetworkStrengthSlider = document.querySelector("#hypernetwork_strength_slider")
 let hypernetworkStrengthField = document.querySelector("#hypernetwork_strength")
@@ -178,6 +187,33 @@ let negativeEmbeddingText = document.querySelector("#negative-embedding-text")
 let embeddingsCollapsiblesBtn = document.querySelector("#embeddings-action-collapsibles-btn")
 
 let makeImageBtn = document.querySelector("#makeImage")
+
+function isVisibleOption(option) {
+    if (!option || option.style.display === "none") {
+        return false
+    }
+
+    const parent = option.parentElement
+    if (parent && parent.tagName === "OPTGROUP" && parent.style.display === "none") {
+        return false
+    }
+
+    return true
+}
+
+function getSupportedSelectValue(selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex]
+    if (isVisibleOption(selectedOption)) {
+        return selectElement.value
+    }
+
+    const firstVisibleOption = Array.from(selectElement.options).find((option) => isVisibleOption(option))
+    return firstVisibleOption ? firstVisibleOption.value : selectElement.value
+}
+
+function isDisplayed(element) {
+    return !!element && getComputedStyle(element).display !== "none"
+}
 let stopImageBtn = document.querySelector("#stopImage")
 let renderButtons = document.querySelector("#render-buttons")
 
@@ -221,7 +257,7 @@ let IMAGE_STEP_SIZE = 64
 
 let loraModels = []
 
-imagePreview.addEventListener("drop", function (ev) {
+imagePreview.addEventListener("drop", function(ev) {
     const data = ev.dataTransfer?.getData("text/plain")
     if (!data) {
         return
@@ -281,13 +317,13 @@ function getLocalStorageBoolItem(key, fallback) {
 }
 
 function handleBoolSettingChange(key) {
-    return function (e) {
+    return function(e) {
         localStorage.setItem(key, e.target.checked.toString())
     }
 }
 
 function handleStringSettingChange(key) {
-    return function (e) {
+    return function(e) {
         localStorage.setItem(key, e.target.value.toString())
     }
 }
@@ -300,7 +336,7 @@ function getSavedDiskPath() {
     return getSetting("diskPath")
 }
 
-function setStatus(statusType, msg, msgType) { }
+function setStatus(statusType, msg, msgType) {}
 
 function setServerStatus(event) {
     switch (event.type) {
@@ -396,7 +432,7 @@ undoButton.addEventListener("click", () => {
     undoRemove()
 })
 
-document.addEventListener("keydown", function (e) {
+document.addEventListener("keydown", function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "z" && e.target == document.body) {
         undoRemove()
     }
@@ -467,7 +503,7 @@ function showImages(reqBody, res, outputContainer, livePreview) {
         imageElem.setAttribute("data-steps", imageInferenceSteps)
         imageElem.setAttribute("data-guidance", imageGuidanceScale)
 
-        imageElem.addEventListener("load", function () {
+        imageElem.addEventListener("load", function() {
             imageItemElem.querySelector(".img_bottom_label").innerText = `${this.naturalWidth} x ${this.naturalHeight}`
         })
 
@@ -476,7 +512,7 @@ function showImages(reqBody, res, outputContainer, livePreview) {
 
         if ("seed" in result && !imageElem.hasAttribute("data-seed")) {
             const imageExpandBtn = imageItemElem.querySelector(".imgExpandBtn")
-            imageExpandBtn.addEventListener("click", function () {
+            imageExpandBtn.addEventListener("click", function() {
                 function previousImage(img) {
                     const allImages = Array.from(outputContainer.parentNode.querySelectorAll(".imgItem img"))
                     const index = allImages.indexOf(img)
@@ -540,7 +576,7 @@ function showImages(reqBody, res, outputContainer, livePreview) {
                 {
                     text: "Use as Thumbnail",
                     on_click: onUseAsThumbnailClick,
-                    filter: (req, img) => "use_embeddings_model" in req || "use_lora_model" in req
+                    filter: (req, img) => "use_embeddings_model" in req || "use_lora_model" in req,
                 },
             ]
 
@@ -557,7 +593,7 @@ function showImages(reqBody, res, outputContainer, livePreview) {
                 undoBuffer: imageUndoBuffer,
                 redoBuffer: imageRedoBuffer,
             }
-            const createButton = function (btnInfo) {
+            const createButton = function(btnInfo) {
                 if (Array.isArray(btnInfo)) {
                     const wrapper = document.createElement("div")
                     btnInfo.map(createButton).forEach((buttonElement) => wrapper.appendChild(buttonElement))
@@ -581,7 +617,7 @@ function showImages(reqBody, res, outputContainer, livePreview) {
                 }
 
                 if (btnInfo.on_click || !isLabel) {
-                    newButton.addEventListener("click", function (event) {
+                    newButton.addEventListener("click", function(event) {
                         btnInfo.on_click.bind(newButton)(req, img, event, tools)
                     })
                     if (btnInfo.on_click === onUndoFilter) {
@@ -633,10 +669,10 @@ function onUseAsInputClick(req, img) {
 
     //Force the image settings size to match the input, as inpaint currently only works correctly
     //if input image and generate sizes match.
-    addImageSizeOption(img.naturalWidth);
-    addImageSizeOption(img.naturalHeight);
-    widthField.value = img.naturalWidth;
-    heightField.value = img.naturalHeight;
+    addImageSizeOption(img.naturalWidth)
+    addImageSizeOption(img.naturalHeight)
+    widthField.value = img.naturalWidth
+    heightField.value = img.naturalHeight
 }
 
 function onUseForControlnetClick(req, img) {
@@ -799,7 +835,6 @@ function onUseAsThumbnailClick(req, img) {
         useAsThumbSelect.appendChild(embOptions)
     }
 
-
     if ("use_lora_model" in req) {
         let LORA = req.use_lora_model
         if (typeof LORA == "string") {
@@ -865,8 +900,7 @@ const Bucket = {
     },
 
     getList(path) {
-        return fetch(`bucket/${path}`)
-            .then((response) => (response.status == 200 ? response.json() : []))
+        return fetch(`bucket/${path}`).then((response) => (response.status == 200 ? response.json() : []))
     },
 
     store(path, data) {
@@ -874,8 +908,7 @@ const Bucket = {
     },
 
     retrieve(path) {
-        return fetch(`bucket/${path}.json`)
-            .then((response) => (response.status == 200 ? response.json() : null))
+        return fetch(`bucket/${path}.json`).then((response) => (response.status == 200 ? response.json() : null))
     },
 }
 
@@ -889,13 +922,11 @@ useAsThumbSaveBtn.addEventListener("click", (e) => {
     cropImageDataUrl(onUseAsThumbnailClick.img.src, crop.x * scale, crop.y * scale, len, len)
         .then((thumb) => fetch(thumb))
         .then((response) => response.blob())
-        .then(async function (blob) {
+        .then(async function(blob) {
             let options = useAsThumbSelect.selectedOptions
             let promises = []
             for (let embedding of options) {
-                promises.push(
-                    Bucket.upload(`${profileName}/${embedding.dataset["type"]}/${embedding.value}.png`, blob)
-                )
+                promises.push(Bucket.upload(`${profileName}/${embedding.dataset["type"]}/${embedding.value}.png`, blob))
             }
             return Promise.all(promises)
         })
@@ -1084,7 +1115,7 @@ function makeImage() {
         hypernetworkStrengthField.value = hypernetworkStrengthSlider.value / 100
     }
     const taskTemplate = getCurrentUserRequest()
-    seedField.value = taskTemplate.reqBody.seed;
+    seedField.value = taskTemplate.reqBody.seed
     const newTaskRequests = getPrompts().map((prompt) =>
         Object.assign({}, taskTemplate, {
             reqBody: Object.assign({ prompt: prompt }, taskTemplate.reqBody),
@@ -1207,7 +1238,8 @@ function createTask(task) {
     if (task.reqBody.ref_images !== undefined && task.reqBody.ref_images.length > 0) {
         let h = 80
         task.reqBody.ref_images.forEach((refImg, idx) => {
-            taskConfig += `<div class="task-initimg ref-img-preview" style="float:left;" title="Reference Image ${idx + 1}"><img style="max-width:${h}px;height:${h}px;object-fit:contain;" src="${refImg}"><div class="task-fs-initimage"></div></div>`
+            taskConfig += `<div class="task-initimg ref-img-preview" style="float:left;" title="Reference Image ${idx +
+                1}"><img style="max-width:${h}px;height:${h}px;object-fit:contain;" src="${refImg}"><div class="task-fs-initimage"></div></div>`
         })
     }
 
@@ -1269,7 +1301,7 @@ function createTask(task) {
         })
         imagePreview.removeEventListener("dragover", onTaskEntryDragOver)
     })
-    taskEntry.addEventListener("dragstart", function (e) {
+    taskEntry.addEventListener("dragstart", function(e) {
         imagePreview.addEventListener("dragover", onTaskEntryDragOver)
         e.dataTransfer.setData("text/plain", taskEntry.id)
         startX = e.target.closest(".imageTaskContainer").offsetLeft
@@ -1288,7 +1320,7 @@ function createTask(task) {
         e.stopPropagation()
 
         if (task["isProcessing"]) {
-            shiftOrConfirm(e, "Stop this task?", async function (e) {
+            shiftOrConfirm(e, "Stop this task?", async function(e) {
                 if (task.batchesDone <= 0 || !task.isProcessing) {
                     removeTask(taskEntry)
                 }
@@ -1300,7 +1332,7 @@ function createTask(task) {
     })
 
     task["useSettings"] = taskEntry.querySelector(".useSettings")
-    task["useSettings"].addEventListener("click", function (e) {
+    task["useSettings"].addEventListener("click", function(e) {
         e.stopPropagation()
         restoreTaskToUI(task, TASK_REQ_NO_EXPORT)
     })
@@ -1353,7 +1385,7 @@ function getCurrentUserRequest() {
             height: height,
             // allow_nsfw: allowNSFWField.checked,
             vram_usage_level: vramUsageLevelField.value,
-            sampler_name: samplerField.value,
+            sampler_name: getSupportedSelectValue(samplerField),
             //render_device: undefined, // Set device affinity. Prefer this device, but wont activate.
             use_stable_diffusion_model: stableDiffusionModelField.value,
             clip_skip: clipSkipField.checked,
@@ -1392,7 +1424,7 @@ function getCurrentUserRequest() {
     if (saveToDiskField.checked && diskPathField.value.trim() !== "") {
         newTask.reqBody.save_to_disk_path = diskPathField.value.trim()
     }
-    if (useFaceCorrectionField.checked) {
+    if (useFaceCorrectionField.checked && isDisplayed(useFaceCorrectionContainer)) {
         newTask.reqBody.use_face_correction = gfpganModelField.value
 
         if (gfpganModelField.value.includes("codeformer")) {
@@ -1401,9 +1433,9 @@ function getCurrentUserRequest() {
         }
     }
     if (useUpscalingField.checked) {
-        newTask.reqBody.use_upscale = upscaleModelField.value
+        newTask.reqBody.use_upscale = getSupportedSelectValue(upscaleModelField)
         newTask.reqBody.upscale_amount = upscaleAmountField.value
-        if (upscaleModelField.value === "latent_upscaler") {
+        if (newTask.reqBody.use_upscale === "latent_upscaler") {
             newTask.reqBody.upscale_amount = "2"
             newTask.reqBody.latent_upscaler_steps = latentUpscalerStepsField.value
         }
@@ -1467,15 +1499,16 @@ function getCurrentUserRequest() {
         newTask.reqBody.use_controlnet_model = controlnetModelField.value
         newTask.reqBody.control_image = controlImagePreview.src
         newTask.reqBody.control_alpha = parseFloat(controlAlphaField.value)
-        if (controlImageFilterField.value !== "") {
-            newTask.reqBody.control_filter_to_apply = controlImageFilterField.value
+        const controlFilter = getSupportedSelectValue(controlImageFilterField)
+        if (controlFilter !== "") {
+            newTask.reqBody.control_filter_to_apply = controlFilter
         }
     }
     if (isFluxModel()) {
         newTask.reqBody.distilled_guidance_scale = parseFloat(distilledGuidanceScaleField.value)
     }
     if (schedulerSelectionContainer.style.display !== "none") {
-        newTask.reqBody.scheduler_name = schedulerField.value
+        newTask.reqBody.scheduler_name = getSupportedSelectValue(schedulerField)
     }
 
     return newTask
@@ -1720,7 +1753,7 @@ function removeTask(taskToRemove) {
 }
 
 clearAllPreviewsBtn.addEventListener("click", (e) => {
-    shiftOrConfirm(e, "Clear all the results and tasks in this window?", async function () {
+    shiftOrConfirm(e, "Clear all the results and tasks in this window?", async function() {
         await stopAllTasks()
 
         let taskEntries = document.querySelectorAll(".imageTaskContainer")
@@ -1825,7 +1858,7 @@ function downloadAllImages() {
         let now = Date.now()
             .toString(36)
             .toUpperCase()
-        zip.generateAsync({ type: "blob" }).then(function (blob) {
+        zip.generateAsync({ type: "blob" }).then(function(blob) {
             saveAs(blob, `EasyDiffusion-Images-${now}.zip`)
         })
     }
@@ -1836,7 +1869,7 @@ saveAllImagesBtn.addEventListener("click", (e) => {
 })
 
 stopImageBtn.addEventListener("click", (e) => {
-    shiftOrConfirm(e, "Stop all the tasks?", async function (e) {
+    shiftOrConfirm(e, "Stop all the tasks?", async function(e) {
         await stopAllTasks()
     })
 })
@@ -1883,7 +1916,7 @@ diskPathField.disabled = !saveToDiskField.checked
 metadataOutputFormatField.disabled = !saveToDiskField.checked
 
 gfpganModelField.disabled = !useFaceCorrectionField.checked
-useFaceCorrectionField.addEventListener("change", function (e) {
+useFaceCorrectionField.addEventListener("change", function(e) {
     gfpganModelField.disabled = !this.checked
 
     onFixFaceModelChange()
@@ -1916,7 +1949,7 @@ controlImagePreview.addEventListener("load", onControlnetModelChange)
 controlImagePreview.addEventListener("unload", onControlnetModelChange)
 onControlnetModelChange()
 
-document.addEventListener("refreshModels", function () {
+document.addEventListener("refreshModels", function() {
     onFixFaceModelChange()
     onControlnetModelChange()
 })
@@ -2045,7 +2078,15 @@ function checkFluxScheduler() {
         return
     }
 
-    const badSchedulers = ["automatic", "uniform", "turbo", "align_your_steps", "align_your_steps_GITS", "align_your_steps_11", "align_your_steps_32"]
+    const badSchedulers = [
+        "automatic",
+        "uniform",
+        "turbo",
+        "align_your_steps",
+        "align_your_steps_GITS",
+        "align_your_steps_11",
+        "align_your_steps_32",
+    ]
 
     let schedulerWarning = document.querySelector("#fluxSchedulerWarning")
     if (isFluxModel() || isChromaModel()) {
@@ -2087,7 +2128,7 @@ sdModelField.addEventListener("change", checkFluxSchedulerSteps)
 schedulerField.addEventListener("change", checkFluxSchedulerSteps)
 numInferenceStepsField.addEventListener("change", checkFluxSchedulerSteps)
 
-document.addEventListener("refreshModels", function () {
+document.addEventListener("refreshModels", function() {
     // checkAndSetDependentModels()
     checkReferenceImageField()
     checkGuidanceValue()
@@ -2130,7 +2171,7 @@ document.addEventListener("refreshModels", function () {
 
 upscaleModelField.disabled = !useUpscalingField.checked
 upscaleAmountField.disabled = !useUpscalingField.checked
-useUpscalingField.addEventListener("change", function (e) {
+useUpscalingField.addEventListener("change", function(e) {
     upscaleModelField.disabled = !this.checked
     upscaleAmountField.disabled = !this.checked
 
@@ -2155,7 +2196,7 @@ onUpscaleModelChange()
 
 makeImageBtn.addEventListener("click", makeImage)
 
-document.onkeydown = function (e) {
+document.onkeydown = function(e) {
     if (e.ctrlKey && e.code === "Enter") {
         makeImage()
         e.preventDefault()
@@ -2358,7 +2399,7 @@ outputFormatField.addEventListener("change", updateOutputQualityVisibility)
 outputLosslessField.addEventListener("change", updateOutputQualityVisibility)
 /********************* Zoom Slider **********************/
 thumbnailSizeField.addEventListener("change", () => {
-    ; (function (s) {
+    ;(function(s) {
         for (var j = 0; j < document.styleSheets.length; j++) {
             let cssSheet = document.styleSheets[j]
             for (var i = 0; i < cssSheet.cssRules.length; i++) {
@@ -2381,7 +2422,7 @@ function onAutoScrollUpdate() {
     }
     autoscrollBtn.querySelector(".state").innerHTML = autoScroll.checked ? "ON" : "OFF"
 }
-autoscrollBtn.addEventListener("click", function () {
+autoscrollBtn.addEventListener("click", function() {
     autoScroll.checked = !autoScroll.checked
     autoScroll.dispatchEvent(new Event("change"))
     onAutoScrollUpdate()
@@ -2408,7 +2449,7 @@ function loadImg2ImgFromFile() {
     let reader = new FileReader()
     let file = initImageSelector.files[0]
 
-    reader.addEventListener("load", function (event) {
+    reader.addEventListener("load", function(event) {
         initImagePreview.src = reader.result
     })
 
@@ -2450,14 +2491,14 @@ function img2imgUnload() {
 initImagePreview.addEventListener("load", img2imgLoad)
 initImageClearBtn.addEventListener("click", img2imgUnload)
 
-maskSetting.addEventListener("click", function () {
+maskSetting.addEventListener("click", function() {
     onDimensionChange()
 })
-maskSetting.addEventListener("change", function () {
+maskSetting.addEventListener("change", function() {
     strictMaskBorderSetting.style.display = this.checked ? "" : "none"
 })
 
-promptsFromFileBtn.addEventListener("click", function () {
+promptsFromFileBtn.addEventListener("click", function() {
     promptsFromFileSelector.click()
 })
 
@@ -2469,7 +2510,7 @@ function loadControlnetImageFromFile() {
     let reader = new FileReader()
     let file = controlImageSelector.files[0]
 
-    reader.addEventListener("load", function (event) {
+    reader.addEventListener("load", function(event) {
         controlImagePreview.src = reader.result
     })
 
@@ -2529,7 +2570,7 @@ function loadRefImagesFromFile() {
     }
     Array.from(refImageSelector.files).forEach((file) => {
         const reader = new FileReader()
-        reader.addEventListener("load", function () {
+        reader.addEventListener("load", function() {
             addRefImage(reader.result)
         })
         reader.readAsDataURL(file)
@@ -2566,7 +2607,7 @@ function controlImageUnload() {
 }
 controlImageClearBtn.addEventListener("click", controlImageUnload)
 
-promptsFromFileSelector.addEventListener("change", async function () {
+promptsFromFileSelector.addEventListener("change", async function() {
     if (promptsFromFileSelector.files.length === 0) {
         return
     }
@@ -2574,7 +2615,7 @@ promptsFromFileSelector.addEventListener("change", async function () {
     let reader = new FileReader()
     let file = promptsFromFileSelector.files[0]
 
-    reader.addEventListener("load", async function () {
+    reader.addEventListener("load", async function() {
         await parseContent(reader.result)
     })
 
@@ -2681,7 +2722,7 @@ function packagesUpdate(event) {
     }
 }
 
-document.getElementById("toggle-cloudflare-tunnel").addEventListener("click", async function () {
+document.getElementById("toggle-cloudflare-tunnel").addEventListener("click", async function() {
     let command = "stop"
     if (document.getElementById("toggle-cloudflare-tunnel").innerHTML == "Start") {
         command = "start"
@@ -2700,7 +2741,7 @@ document.getElementById("toggle-cloudflare-tunnel").addEventListener("click", as
     console.log(`Cloudflare tunnel ${command} result:`, res)
 })
 
-document.getElementById("toggle-tensorrt-install").addEventListener("click", function (e) {
+document.getElementById("toggle-tensorrt-install").addEventListener("click", function(e) {
     if (this.disabled === true) {
         return
     }
@@ -2711,7 +2752,7 @@ document.getElementById("toggle-tensorrt-install").addEventListener("click", fun
     shiftOrConfirm(
         e,
         "Are you sure you want to " + command + " TensorRT?",
-        async function () {
+        async function() {
             showToast(`TensorRT ${command} started. Please wait.`)
 
             self.disabled = true
@@ -2770,7 +2811,7 @@ function loadThumbnailImageFromFile() {
     let reader = new FileReader()
     let file = addEmbeddingsThumbInput.files[0]
 
-    reader.addEventListener("load", function (event) {
+    reader.addEventListener("load", function(event) {
         let img = document.createElement("img")
         img.src = reader.result
         onUseAsThumbnailClick(
@@ -2889,7 +2930,7 @@ function updateEmbeddingsList(filter = "") {
 
             return Bucket.getList(`${profileName}/lora/`)
         })
-        .then(async function (icons) {
+        .then(async function(icons) {
             for (let lora of loraModelField.value.modelNames) {
                 let keywords = await getLoraKeywords(lora)
                 loraTokens = loraTokens.concat(keywords)
@@ -2898,14 +2939,13 @@ function updateEmbeddingsList(filter = "") {
                 if (icons.includes(`${loraname}.png`)) {
                     keywords.forEach((kw) => {
                         iconMap[kw.toLowerCase()] = `lora/${loraname}.png`
-
                     })
                 }
             }
 
             let tokenList = [...modelsOptions.embeddings]
             if (loraTokens.length != 0) {
-                tokenList.unshift(['LORA Keywords', loraTokens])
+                tokenList.unshift(["LORA Keywords", loraTokens])
             }
             embeddingsList.replaceChildren(html(tokenList, iconMap, "", filter))
             createCollapsibles(embeddingsList)
@@ -2996,20 +3036,20 @@ embeddingsCollapsiblesBtn.addEventListener("click", (e) => {
 /* Pause function */
 document.querySelectorAll(".tab").forEach(linkTabContents)
 
-window.addEventListener("beforeunload", function (e) {
+window.addEventListener("beforeunload", function(e) {
     const msg = "Unsaved pictures will be lost!"
 
     let elementList = document.getElementsByClassName("imageTaskContainer")
     if (elementList.length != 0) {
         e.preventDefault()
-            ; (e || window.event).returnValue = msg
+        ;(e || window.event).returnValue = msg
         return msg
     } else {
         return true
     }
 })
 
-document.addEventListener("collapsibleClick", function (e) {
+document.addEventListener("collapsibleClick", function(e) {
     let header = e.detail
     if (header === document.querySelector("#negative_prompt_handle")) {
         if (header.classList.contains("active")) {
@@ -3076,135 +3116,135 @@ function enlargeImageSize(factor) {
 
 let recentResolutionsValues = []
 
-    ; (function () {
-        ///// Init resolutions dropdown
+;(function() {
+    ///// Init resolutions dropdown
 
-        function makeResolutionButtons(listElement, resolutionList) {
-            listElement.innerHTML = ""
-            resolutionList.forEach((el) => {
-                let button = createElement("button", { style: "width: 8em;" }, "tertiaryButton", `${el.w}×${el.h}`)
-                button.addEventListener("click", () => {
-                    customWidthField.value = el.w
-                    customHeightField.value = el.h
-                    hidePopup()
-                })
-                listElement.appendChild(button)
-                listElement.appendChild(document.createElement("br"))
-            })
-        }
-
-        enlargeButtons.querySelectorAll("button").forEach((button) =>
-            button.addEventListener("click", (e) => {
-                enlargeImageSize(parseFloat(button.dataset["factor"]))
+    function makeResolutionButtons(listElement, resolutionList) {
+        listElement.innerHTML = ""
+        resolutionList.forEach((el) => {
+            let button = createElement("button", { style: "width: 8em;" }, "tertiaryButton", `${el.w}×${el.h}`)
+            button.addEventListener("click", () => {
+                customWidthField.value = el.w
+                customHeightField.value = el.h
                 hidePopup()
             })
-        )
-
-        customWidthField.addEventListener("change", () => {
-            let w = customWidthField.value
-            customWidthField.value = roundToMultiple(w, customWidthField.step)
-            if (w != customWidthField.value) {
-                showToast(`Rounded width to the closest multiple of ${customWidthField.step}.`)
-            }
+            listElement.appendChild(button)
+            listElement.appendChild(document.createElement("br"))
         })
+    }
 
-        customHeightField.addEventListener("change", () => {
-            let h = customHeightField.value
-            customHeightField.value = roundToMultiple(h, customHeightField.step)
-            if (h != customHeightField.value) {
-                showToast(`Rounded height to the closest multiple of ${customHeightField.step}.`)
-            }
-        })
-
-        makeImageBtn.addEventListener("click", () => {
-            let w = widthField.value
-            let h = heightField.value
-
-            recentResolutionsValues = recentResolutionsValues.filter((el) => el.w != w || el.h != h)
-            recentResolutionsValues.unshift({ w: w, h: h })
-            recentResolutionsValues = recentResolutionsValues.slice(0, 8)
-
-            localStorage.recentResolutionsValues = JSON.stringify(recentResolutionsValues)
-            makeResolutionButtons(recentResolutionList, recentResolutionsValues)
-        })
-
-        const defaultResolutionsValues = [
-            { w: 512, h: 512 },
-            { w: 448, h: 640 },
-            { w: 512, h: 768 },
-            { w: 768, h: 512 },
-            { w: 1024, h: 768 },
-            { w: 768, h: 1024 },
-            { w: 1024, h: 1024 },
-            { w: 1920, h: 1080 },
-        ]
-        let _jsonstring = localStorage.recentResolutionsValues
-        if (_jsonstring == undefined) {
-            recentResolutionsValues = defaultResolutionsValues
-            localStorage.recentResolutionsValues = JSON.stringify(recentResolutionsValues)
-        } else {
-            recentResolutionsValues = JSON.parse(localStorage.recentResolutionsValues)
-        }
-
-        makeResolutionButtons(recentResolutionList, recentResolutionsValues)
-        makeResolutionButtons(commonResolutionList, defaultResolutionsValues)
-
-        recentResolutionsValues.forEach((val) => {
-            addImageSizeOption(val.w)
-            addImageSizeOption(val.h)
-        })
-
-        function processClick(e) {
-            if (!recentResolutionsPopup.contains(e.target)) {
-                hidePopup()
-            }
-        }
-
-        function showPopup() {
-            customWidthField.value = widthField.value
-            customHeightField.value = heightField.value
-            recentResolutionsPopup.classList.remove("displayNone")
-            resizeSlider.value = 1
-            resizeSlider.dataset["w"] = widthField.value
-            resizeSlider.dataset["h"] = heightField.value
-            document.addEventListener("click", processClick)
-        }
-
-        function hidePopup() {
-            recentResolutionsPopup.classList.add("displayNone")
-            setImageWidthHeight(customWidthField.value, customHeightField.value)
-            document.removeEventListener("click", processClick)
-        }
-
-        recentResolutionsButton.addEventListener("click", (event) => {
-            if (recentResolutionsPopup.classList.contains("displayNone")) {
-                showPopup()
-                event.stopPropagation()
-            } else {
-                hidePopup()
-            }
-        })
-
-        resizeSlider.addEventListener("input", (e) => {
-            let w = parseInt(resizeSlider.dataset["w"])
-            let h = parseInt(resizeSlider.dataset["h"])
-            let factor = parseFloat(resizeSlider.value)
-            let step = customWidthField.step
-
-            customWidthField.value = roundToMultiple(w * factor * factor, step)
-            customHeightField.value = roundToMultiple(h * factor * factor, step)
-        })
-
-        resizeSlider.addEventListener("change", (e) => {
+    enlargeButtons.querySelectorAll("button").forEach((button) =>
+        button.addEventListener("click", (e) => {
+            enlargeImageSize(parseFloat(button.dataset["factor"]))
             hidePopup()
         })
+    )
 
-        swapWidthHeightButton.addEventListener("click", (event) => {
-            let temp = widthField.value
-            widthField.value = heightField.value
-            heightField.value = temp
-        })
-    })()
+    customWidthField.addEventListener("change", () => {
+        let w = customWidthField.value
+        customWidthField.value = roundToMultiple(w, customWidthField.step)
+        if (w != customWidthField.value) {
+            showToast(`Rounded width to the closest multiple of ${customWidthField.step}.`)
+        }
+    })
+
+    customHeightField.addEventListener("change", () => {
+        let h = customHeightField.value
+        customHeightField.value = roundToMultiple(h, customHeightField.step)
+        if (h != customHeightField.value) {
+            showToast(`Rounded height to the closest multiple of ${customHeightField.step}.`)
+        }
+    })
+
+    makeImageBtn.addEventListener("click", () => {
+        let w = widthField.value
+        let h = heightField.value
+
+        recentResolutionsValues = recentResolutionsValues.filter((el) => el.w != w || el.h != h)
+        recentResolutionsValues.unshift({ w: w, h: h })
+        recentResolutionsValues = recentResolutionsValues.slice(0, 8)
+
+        localStorage.recentResolutionsValues = JSON.stringify(recentResolutionsValues)
+        makeResolutionButtons(recentResolutionList, recentResolutionsValues)
+    })
+
+    const defaultResolutionsValues = [
+        { w: 512, h: 512 },
+        { w: 448, h: 640 },
+        { w: 512, h: 768 },
+        { w: 768, h: 512 },
+        { w: 1024, h: 768 },
+        { w: 768, h: 1024 },
+        { w: 1024, h: 1024 },
+        { w: 1920, h: 1080 },
+    ]
+    let _jsonstring = localStorage.recentResolutionsValues
+    if (_jsonstring == undefined) {
+        recentResolutionsValues = defaultResolutionsValues
+        localStorage.recentResolutionsValues = JSON.stringify(recentResolutionsValues)
+    } else {
+        recentResolutionsValues = JSON.parse(localStorage.recentResolutionsValues)
+    }
+
+    makeResolutionButtons(recentResolutionList, recentResolutionsValues)
+    makeResolutionButtons(commonResolutionList, defaultResolutionsValues)
+
+    recentResolutionsValues.forEach((val) => {
+        addImageSizeOption(val.w)
+        addImageSizeOption(val.h)
+    })
+
+    function processClick(e) {
+        if (!recentResolutionsPopup.contains(e.target)) {
+            hidePopup()
+        }
+    }
+
+    function showPopup() {
+        customWidthField.value = widthField.value
+        customHeightField.value = heightField.value
+        recentResolutionsPopup.classList.remove("displayNone")
+        resizeSlider.value = 1
+        resizeSlider.dataset["w"] = widthField.value
+        resizeSlider.dataset["h"] = heightField.value
+        document.addEventListener("click", processClick)
+    }
+
+    function hidePopup() {
+        recentResolutionsPopup.classList.add("displayNone")
+        setImageWidthHeight(customWidthField.value, customHeightField.value)
+        document.removeEventListener("click", processClick)
+    }
+
+    recentResolutionsButton.addEventListener("click", (event) => {
+        if (recentResolutionsPopup.classList.contains("displayNone")) {
+            showPopup()
+            event.stopPropagation()
+        } else {
+            hidePopup()
+        }
+    })
+
+    resizeSlider.addEventListener("input", (e) => {
+        let w = parseInt(resizeSlider.dataset["w"])
+        let h = parseInt(resizeSlider.dataset["h"])
+        let factor = parseFloat(resizeSlider.value)
+        let step = customWidthField.step
+
+        customWidthField.value = roundToMultiple(w * factor * factor, step)
+        customHeightField.value = roundToMultiple(h * factor * factor, step)
+    })
+
+    resizeSlider.addEventListener("change", (e) => {
+        hidePopup()
+    })
+
+    swapWidthHeightButton.addEventListener("click", (event) => {
+        let temp = widthField.value
+        widthField.value = heightField.value
+        heightField.value = temp
+    })
+})()
 
 document.addEventListener("before_task_start", (e) => {
     let task = e.detail.task

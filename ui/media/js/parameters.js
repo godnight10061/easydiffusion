@@ -463,20 +463,50 @@ async function changeAppConfig(configDelta) {
 }
 
 function getDefaultDisplay(element) {
-    const tag = element.tagName.toLowerCase();
+    const tag = element.tagName.toLowerCase()
     const defaultDisplays = {
-        div: 'block',
-        span: 'inline',
-        p: 'block',
-        tr: 'table-row',
-        table: 'table',
-        li: 'list-item',
-        ul: 'block',
-        ol: 'block',
-        button: 'inline',
+        div: "block",
+        span: "inline",
+        p: "block",
+        tr: "table-row",
+        table: "table",
+        li: "list-item",
+        ul: "block",
+        ol: "block",
+        button: "inline",
         // Add more if needed
-    };
-    return defaultDisplays[tag] || 'block'; // Default to 'block' if not listed
+    }
+    return defaultDisplays[tag] || "block" // Default to 'block' if not listed
+}
+
+function isVisibleGatedOption(option) {
+    if (!option || option.style.display === "none") {
+        return false
+    }
+
+    const parent = option.parentElement
+    if (parent && parent.tagName === "OPTGROUP" && parent.style.display === "none") {
+        return false
+    }
+
+    return true
+}
+
+function normalizeHiddenGatedSelects() {
+    document.querySelectorAll("select").forEach((selectElement) => {
+        const selectedOption = selectElement.options[selectElement.selectedIndex]
+        if (isVisibleGatedOption(selectedOption)) {
+            return
+        }
+
+        const firstVisibleOption = Array.from(selectElement.options).find((option) => isVisibleGatedOption(option))
+        if (!firstVisibleOption) {
+            return
+        }
+
+        selectElement.value = firstVisibleOption.value
+        selectElement.dispatchEvent(new Event("change"))
+    })
 }
 
 async function getAppConfig() {
@@ -532,15 +562,17 @@ async function getAppConfig() {
 
         const currentBackendKey = "backend_" + config.backend
 
-        document.querySelectorAll('.gated-feature').forEach((element) => {
-            const featureKeys = element.getAttribute('data-feature-keys').split(' ')
+        document.querySelectorAll(".gated-feature").forEach((element) => {
+            const featureKeys = element.getAttribute("data-feature-keys").split(" ")
 
             if (featureKeys.includes(currentBackendKey)) {
                 element.style.display = getDefaultDisplay(element)
             } else {
-                element.style.display = 'none'
+                element.style.display = "none"
             }
-        });
+        })
+
+        normalizeHiddenGatedSelects()
 
         if (config.force_save_metadata) {
             metadataOutputFormatField.value = config.force_save_metadata
@@ -591,7 +623,7 @@ function applySettingsFromConfig(config) {
     })
 }
 
-saveToDiskField.addEventListener("change", function (e) {
+saveToDiskField.addEventListener("change", function(e) {
     diskPathField.disabled = !this.checked
     metadataOutputFormatField.disabled = !this.checked
 })
@@ -609,7 +641,7 @@ function getCurrentRenderDeviceSelection() {
     return selectedGPUs.join(",")
 }
 
-useCPUField.addEventListener("click", function () {
+useCPUField.addEventListener("click", function() {
     let gpuSettingEntry = getParameterSettingsEntry("use_gpus")
     let autoPickGPUSettingEntry = getParameterSettingsEntry("auto_pick_gpus")
     if (this.checked) {
@@ -631,12 +663,12 @@ useCPUField.addEventListener("click", function () {
     }
 })
 
-useGPUsField.addEventListener("click", function () {
+useGPUsField.addEventListener("click", function() {
     let selectedGPUs = $("#use_gpus").val()
     autoPickGPUsField.checked = selectedGPUs.length === 0
 })
 
-autoPickGPUsField.addEventListener("click", function () {
+autoPickGPUsField.addEventListener("click", function() {
     if (this.checked) {
         $("#use_gpus").val([])
     }
@@ -723,12 +755,12 @@ async function getSystemInfo() {
             useCPUField.checked = true
             useCPUField.disabled = true // no compatible GPUs, so make the CPU mandatory
 
-            getParameterSettingsEntry("use_cpu").addEventListener("click", function () {
+            getParameterSettingsEntry("use_cpu").addEventListener("click", function() {
                 alert(
                     "Sorry, we could not find a compatible graphics card! Easy Diffusion supports graphics cards with minimum 2 GB of RAM. " +
-                    "Only NVIDIA cards are supported on Windows. NVIDIA and AMD cards are supported on Linux.<br/><br/>" +
-                    "If you have a compatible graphics card, please try updating to the latest drivers.<br/><br/>" +
-                    "Only the CPU can be used for generating images, without a compatible graphics card.",
+                        "Only NVIDIA cards are supported on Windows. NVIDIA and AMD cards are supported on Linux.<br/><br/>" +
+                        "If you have a compatible graphics card, please try updating to the latest drivers.<br/><br/>" +
+                        "Only the CPU can be used for generating images, without a compatible graphics card.",
                     "No compatible graphics card found!"
                 )
             })
@@ -776,7 +808,7 @@ async function getSystemInfo() {
     }
 }
 
-saveSettingsBtn.addEventListener("click", function () {
+saveSettingsBtn.addEventListener("click", function() {
     if (listenPortField.value == "") {
         alert("The network port field must not be empty.")
         return
@@ -848,7 +880,7 @@ listenPortField.addEventListener(
 let copyCloudflareAddressBtn = document.querySelector("#copy-cloudflare-address")
 let cloudflareAddressField = document.getElementById("cloudflare-address")
 
-navigator.permissions.query({ name: "clipboard-write" }).then(function (result) {
+navigator.permissions.query({ name: "clipboard-write" }).then(function(result) {
     if (result.state === "granted") {
         // you can read from the clipboard
         copyCloudflareAddressBtn.addEventListener("click", (e) => {
