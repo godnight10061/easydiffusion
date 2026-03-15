@@ -479,27 +479,14 @@ function getDefaultDisplay(element) {
     return defaultDisplays[tag] || "block" // Default to 'block' if not listed
 }
 
-function isVisibleGatedOption(option) {
-    if (!option || option.style.display === "none") {
-        return false
-    }
-
-    const parent = option.parentElement
-    if (parent && parent.tagName === "OPTGROUP" && parent.style.display === "none") {
-        return false
-    }
-
-    return true
-}
-
 function normalizeHiddenGatedSelects() {
     document.querySelectorAll("select").forEach((selectElement) => {
         const selectedOption = selectElement.options[selectElement.selectedIndex]
-        if (isVisibleGatedOption(selectedOption)) {
+        if (isVisibleSelectOption(selectedOption)) {
             return
         }
 
-        const firstVisibleOption = Array.from(selectElement.options).find((option) => isVisibleGatedOption(option))
+        const firstVisibleOption = Array.from(selectElement.options).find((option) => isVisibleSelectOption(option))
         if (!firstVisibleOption) {
             return
         }

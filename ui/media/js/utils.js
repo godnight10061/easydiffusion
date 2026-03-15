@@ -20,6 +20,19 @@ function getNextSibling(elem, selector) {
     }
 }
 
+function isVisibleSelectOption(option) {
+    if (!option || option.style.display === "none") {
+        return false
+    }
+
+    const parent = option.parentElement
+    if (parent && parent.tagName === "OPTGROUP" && parent.style.display === "none") {
+        return false
+    }
+
+    return true
+}
+
 /* Panel Stuff */
 
 // true = open
@@ -69,7 +82,7 @@ function createCollapsibles(node) {
         save = true
     }
     let collapsibles = node.querySelectorAll(".collapsible")
-    collapsibles.forEach(function (c) {
+    collapsibles.forEach(function(c) {
         if (save && c.parentElement.id) {
             COLLAPSIBLE_PANELS.push(c.parentElement)
         }
@@ -83,7 +96,7 @@ function createCollapsibles(node) {
         }
         c.insertBefore(handle, c.firstChild)
 
-        c.addEventListener("click", function () {
+        c.addEventListener("click", function() {
             toggleCollapsible(c.parentElement)
         })
     })
@@ -130,9 +143,9 @@ function tryLoadOldCollapsibles() {
 }
 
 function collapseAll(selector) {
-    const collapsibleElems = document.querySelectorAll(selector); // needs to have ";"
+    const collapsibleElems = document.querySelectorAll(selector) // needs to have ";"
 
-    [...collapsibleElems].forEach((elem) => {
+    ;[...collapsibleElems].forEach((elem) => {
         const isActive = elem.classList.contains("active")
 
         if (isActive) {
@@ -142,9 +155,9 @@ function collapseAll(selector) {
 }
 
 function expandAll(selector) {
-    const collapsibleElems = document.querySelectorAll(selector); // needs to have ";"
+    const collapsibleElems = document.querySelectorAll(selector) // needs to have ";"
 
-    [...collapsibleElems].forEach((elem) => {
+    ;[...collapsibleElems].forEach((elem) => {
         const isActive = elem.classList.contains("active")
 
         if (!isActive) {
@@ -152,7 +165,6 @@ function expandAll(selector) {
         }
     })
 }
-
 
 function permute(arr) {
     let permutations = []
@@ -223,9 +235,9 @@ function BraceExpander() {
         return n
             ? bracePair(tkns, iPosn + 1, n, lst)
             : {
-                close: iPosn,
-                commas: lst,
-            }
+                  close: iPosn,
+                  commas: lst,
+              }
     }
 
     // Parse of a SYNTAGM subtree
@@ -233,11 +245,11 @@ function BraceExpander() {
         if (!tkns.length) return [dctSofar, []]
 
         let dctParse = dctSofar
-            ? dctSofar
-            : {
-                fn: and,
-                args: [],
-            },
+                ? dctSofar
+                : {
+                      fn: and,
+                      args: [],
+                  },
             head = tkns[0],
             tail = head ? tkns.slice(1) : [],
             dctBrace = head === "{" ? bracePair(tkns, 0, 0, []) : null,
@@ -260,12 +272,12 @@ function BraceExpander() {
         return {
             fn: or,
             args: splitsAt(lstCommas, tkns)
-                .map(function (x, i) {
+                .map(function(x, i) {
                     let ts = x.slice(1, i === iLast ? -1 : void 0)
 
                     return ts.length ? ts : [""]
                 })
-                .map(function (ts) {
+                .map(function(ts) {
                     return ts.length > 1 ? andTree(null, ts)[0] : ts[0]
                 }),
         }
@@ -274,14 +286,14 @@ function BraceExpander() {
     // List of unescaped braces and commas, and remaining strings
     function tokens(str) {
         // Filter function excludes empty splitting artefacts
-        let toS = function (x) {
+        let toS = function(x) {
             return x.toString()
         }
 
         return str
             .split(/(\\\\)/)
             .filter(toS)
-            .reduce(function (a, s) {
+            .reduce(function(a, s) {
                 return a.concat(s.charAt(0) === "\\" ? s : s.split(/(\\*[{,}])/).filter(toS))
             }, [])
     }
@@ -295,13 +307,13 @@ function BraceExpander() {
 
         return lng
             ? 1 < lng
-                ? lstHead.reduce(function (a, h) {
-                    return a.concat(
-                        and(args.slice(1)).map(function (t) {
-                            return h + t
-                        })
-                    )
-                }, [])
+                ? lstHead.reduce(function(a, h) {
+                      return a.concat(
+                          and(args.slice(1)).map(function(t) {
+                              return h + t
+                          })
+                      )
+                  }, [])
                 : lstHead
             : []
     }
@@ -309,7 +321,7 @@ function BraceExpander() {
     // PARSE TREE OPERATOR (2 of 2)
     // Each option flattened
     function or(args) {
-        return args.reduce(function (a, b) {
+        return args.reduce(function(a, b) {
             return a.concat(b)
         }, [])
     }
@@ -322,7 +334,7 @@ function BraceExpander() {
     // One list split into several (sublist lengths [n])
     function splitsAt(lstN, lst) {
         return lstN.reduceRight(
-            function (a, x) {
+            function(a, x) {
                 return splitAt(x, a[0]).concat(a.slice(1))
             },
             [lst]
@@ -338,7 +350,7 @@ function BraceExpander() {
     function pp(e) {
         return JSON.stringify(
             e,
-            function (k, v) {
+            function(k, v) {
                 return typeof v === "function" ? "[function " + v.name + "]" : v
             },
             2
@@ -348,7 +360,7 @@ function BraceExpander() {
     // ----------------------- MAIN ------------------------
 
     // s -> [s]
-    this.expand = function (s) {
+    this.expand = function(s) {
         // BRACE EXPRESSION PARSED
         let dctParse = andTree(null, tokens(s))[0]
 
@@ -364,7 +376,7 @@ function BraceExpander() {
  * @Returns a promise that will resolve after the specified timeout.
  */
 function asyncDelay(timeout) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         setTimeout(resolve, timeout, true)
     })
 }
@@ -396,7 +408,7 @@ function debounce(func, wait, immediate) {
     }
     let timeout = null
     let lastPromiseSrc = new PromiseSource()
-    const applyFn = function (context, args) {
+    const applyFn = function(context, args) {
         let result = undefined
         try {
             result = func.apply(context, args)
@@ -409,13 +421,13 @@ function debounce(func, wait, immediate) {
             lastPromiseSrc.resolve(result)
         }
     }
-    return function (...args) {
+    return function(...args) {
         const callNow = Boolean(immediate && !timeout)
         const context = this
         if (timeout) {
             clearTimeout(timeout)
         }
-        timeout = setTimeout(function () {
+        timeout = setTimeout(function() {
             if (!immediate) {
                 applyFn(context, args)
             }
@@ -485,13 +497,13 @@ function makeQuerablePromise(promise) {
     let isResolved = false
     let resolvedValue = undefined
     const qurPro = promise.then(
-        function (val) {
+        function(val) {
             isResolved = true
             isPending = false
             resolvedValue = val
             return val
         },
-        function (reason) {
+        function(reason) {
             rejectReason = reason
             isRejected = true
             isPending = false
@@ -712,7 +724,7 @@ function createElement(tagName, attributes, classes, textOrElements) {
         })
     }
     if (classes) {
-        ; (Array.isArray(classes) ? classes : [classes]).forEach((className) => element.classList.add(className))
+        ;(Array.isArray(classes) ? classes : [classes]).forEach((className) => element.classList.add(className))
     }
     if (textOrElements) {
         const children = Array.isArray(textOrElements) ? textOrElements : [textOrElements]
@@ -732,10 +744,10 @@ function createElement(tagName, attributes, classes, textOrElements) {
  * @param {keyof Array} method
  * @param {(args) => {}} callback
  */
-Array.prototype.addEventListener = function (method, callback) {
+Array.prototype.addEventListener = function(method, callback) {
     const originalFunction = this[method]
     if (originalFunction) {
-        this[method] = function () {
+        this[method] = function() {
             originalFunction.apply(this, arguments)
             callback.apply(this, arguments)
         }
@@ -870,7 +882,6 @@ function createTab(request) {
     })
 }
 
-
 /* TOAST NOTIFICATIONS */
 function showToast(message, duration = 5000, error = false) {
     const toast = document.createElement("div")
@@ -949,18 +960,17 @@ function confirm(msg, title, fn) {
         content: msg,
         buttons: {
             yes: fn,
-            cancel: () => { },
+            cancel: () => {},
         },
     })
 }
-
 
 /* STORAGE MANAGEMENT */
 // Request persistent storage
 async function requestPersistentStorage() {
     if (navigator.storage && navigator.storage.persist) {
-        const isPersisted = await navigator.storage.persist();
-        console.log(`Persisted storage granted: ${isPersisted}`);
+        const isPersisted = await navigator.storage.persist()
+        console.log(`Persisted storage granted: ${isPersisted}`)
     }
 }
 requestPersistentStorage()
@@ -968,58 +978,58 @@ requestPersistentStorage()
 // Open a database
 async function openDB() {
     return new Promise((resolve, reject) => {
-        let request = indexedDB.open("EasyDiffusionSettingsDatabase", 1);
-        request.addEventListener("upgradeneeded", function () {
-            let db = request.result;
-            db.createObjectStore("EasyDiffusionSettings", { keyPath: "id" });
-        });
-        request.addEventListener("success", function () {
-            resolve(request.result);
-        });
-        request.addEventListener("error", function () {
-            reject(request.error);
-        });
-    });
+        let request = indexedDB.open("EasyDiffusionSettingsDatabase", 1)
+        request.addEventListener("upgradeneeded", function() {
+            let db = request.result
+            db.createObjectStore("EasyDiffusionSettings", { keyPath: "id" })
+        })
+        request.addEventListener("success", function() {
+            resolve(request.result)
+        })
+        request.addEventListener("error", function() {
+            reject(request.error)
+        })
+    })
 }
 
 // Function to write data to the object store
 async function setStorageData(key, value) {
-    return openDB().then(db => {
-        let tx = db.transaction("EasyDiffusionSettings", "readwrite");
-        let store = tx.objectStore("EasyDiffusionSettings");
-        let data = { id: key, value: value };
+    return openDB().then((db) => {
+        let tx = db.transaction("EasyDiffusionSettings", "readwrite")
+        let store = tx.objectStore("EasyDiffusionSettings")
+        let data = { id: key, value: value }
         return new Promise((resolve, reject) => {
-            let request = store.put(data);
-            request.addEventListener("success", function () {
-                resolve(request.result);
-            });
-            request.addEventListener("error", function () {
-                reject(request.error);
-            });
-        });
-    });
+            let request = store.put(data)
+            request.addEventListener("success", function() {
+                resolve(request.result)
+            })
+            request.addEventListener("error", function() {
+                reject(request.error)
+            })
+        })
+    })
 }
 
 // Function to retrieve data from the object store
 async function getStorageData(key) {
-    return openDB().then(db => {
-        let tx = db.transaction("EasyDiffusionSettings", "readonly");
-        let store = tx.objectStore("EasyDiffusionSettings");
+    return openDB().then((db) => {
+        let tx = db.transaction("EasyDiffusionSettings", "readonly")
+        let store = tx.objectStore("EasyDiffusionSettings")
         return new Promise((resolve, reject) => {
-            let request = store.get(key);
-            request.addEventListener("success", function () {
+            let request = store.get(key)
+            request.addEventListener("success", function() {
                 if (request.result) {
-                    resolve(request.result.value);
+                    resolve(request.result.value)
                 } else {
                     // entry not found
-                    resolve();
+                    resolve()
                 }
-            });
-            request.addEventListener("error", function () {
-                reject(request.error);
-            });
-        });
-    });
+            })
+            request.addEventListener("error", function() {
+                reject(request.error)
+            })
+        })
+    })
 }
 
 function insertAtCursor(field, text) {
@@ -1029,8 +1039,12 @@ function insertAtCursor(field, text) {
         var before = field.value.substring(0, startPos)
         var after = field.value.substring(endPos, field.value.length)
 
-        if (!before.endsWith(" ")) { before += " " }
-        if (!after.startsWith(" ")) { after = " " + after }
+        if (!before.endsWith(" ")) {
+            before += " "
+        }
+        if (!after.startsWith(" ")) {
+            after = " " + after
+        }
 
         field.value = before + text + after
     } else {
@@ -1040,33 +1054,33 @@ function insertAtCursor(field, text) {
 
 // indexedDB debug functions
 async function getAllKeys() {
-    return openDB().then(db => {
-        let tx = db.transaction("EasyDiffusionSettings", "readonly");
-        let store = tx.objectStore("EasyDiffusionSettings");
-        let keys = [];
+    return openDB().then((db) => {
+        let tx = db.transaction("EasyDiffusionSettings", "readonly")
+        let store = tx.objectStore("EasyDiffusionSettings")
+        let keys = []
         return new Promise((resolve, reject) => {
-            store.openCursor().onsuccess = function (event) {
-                let cursor = event.target.result;
+            store.openCursor().onsuccess = function(event) {
+                let cursor = event.target.result
                 if (cursor) {
-                    keys.push(cursor.key);
-                    cursor.continue();
+                    keys.push(cursor.key)
+                    cursor.continue()
                 } else {
-                    resolve(keys);
+                    resolve(keys)
                 }
-            };
-        });
-    });
+            }
+        })
+    })
 }
 
 async function logAllStorageKeys() {
     try {
-        let keys = await getAllKeys();
-        console.log("All keys:", keys);
+        let keys = await getAllKeys()
+        console.log("All keys:", keys)
         for (const k of keys) {
             console.log(k, await getStorageData(k))
         }
     } catch (error) {
-        console.error("Error retrieving keys:", error);
+        console.error("Error retrieving keys:", error)
     }
 }
 
@@ -1074,26 +1088,26 @@ async function logAllStorageKeys() {
 async function deleteKeys(keyToDelete) {
     let confirmationMessage = keyToDelete
         ? `This will delete the template with key "${keyToDelete}". Continue?`
-        : "This will delete ALL templates. Continue?";
+        : "This will delete ALL templates. Continue?"
     if (confirm(confirmationMessage)) {
-        return openDB().then(db => {
-            let tx = db.transaction("EasyDiffusionSettings", "readwrite");
-            let store = tx.objectStore("EasyDiffusionSettings");
+        return openDB().then((db) => {
+            let tx = db.transaction("EasyDiffusionSettings", "readwrite")
+            let store = tx.objectStore("EasyDiffusionSettings")
             return new Promise((resolve, reject) => {
-                store.openCursor().onsuccess = function (event) {
-                    let cursor = event.target.result;
+                store.openCursor().onsuccess = function(event) {
+                    let cursor = event.target.result
                     if (cursor) {
                         if (!keyToDelete || cursor.key === keyToDelete) {
-                            cursor.delete();
+                            cursor.delete()
                         }
-                        cursor.continue();
+                        cursor.continue()
                     } else {
                         // refresh the dropdown and resolve
-                        resolve();
+                        resolve()
                     }
-                };
-            });
-        });
+                }
+            })
+        })
     }
 }
 
@@ -1111,14 +1125,14 @@ function cropImageDataUrl(dataUrl, x, y, width, height) {
         image.src = dataUrl
 
         image.onload = () => {
-            const canvas = document.createElement('canvas')
+            const canvas = document.createElement("canvas")
             canvas.width = width
             canvas.height = height
 
-            const ctx = canvas.getContext('2d')
+            const ctx = canvas.getContext("2d")
             ctx.drawImage(image, x, y, width, height, 0, 0, width, height)
 
-            const croppedDataUrl = canvas.toDataURL('image/png')
+            const croppedDataUrl = canvas.toDataURL("image/png")
             resolve(croppedDataUrl)
         }
 
@@ -1133,14 +1147,14 @@ function cropImageDataUrl(dataUrl, x, y, width, height) {
  * @return {Element}
  */
 function htmlToElement(html) {
-    var template = document.createElement('template');
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content.firstChild;
+    var template = document.createElement("template")
+    html = html.trim() // Never return a text node of whitespace as the result
+    template.innerHTML = html
+    return template.content.firstChild
 }
 
 function modalDialogCloseOnBackdropClick(dialog) {
-    dialog.addEventListener('mousedown', function (event) {
+    dialog.addEventListener("mousedown", function(event) {
         // Firefox creates an event with clientX|Y = 0|0 when choosing an <option>.
         // Test whether the element interacted with is a child of the dialog, but not the
         // dialog itself (the backdrop would be a part of the dialog)
@@ -1148,8 +1162,11 @@ function modalDialogCloseOnBackdropClick(dialog) {
             return
         }
         var rect = dialog.getBoundingClientRect()
-        var isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height
-            && rect.left <= event.clientX && event.clientX <= rect.left + rect.width)
+        var isInDialog =
+            rect.top <= event.clientY &&
+            event.clientY <= rect.top + rect.height &&
+            rect.left <= event.clientX &&
+            event.clientX <= rect.left + rect.width
         if (!isInDialog) {
             dialog.close()
         }
@@ -1157,45 +1174,52 @@ function modalDialogCloseOnBackdropClick(dialog) {
 }
 
 function makeDialogDraggable(element) {
-    element.querySelector(".dialog-header").addEventListener('mousedown', (function () {
-        let deltaX = 0
-        let deltaY = 0
-        let dragStartX = 0
-        let dragStartY = 0
-        let oldTop = 0
-        let oldLeft = 0
+    element.querySelector(".dialog-header").addEventListener(
+        "mousedown",
+        (function() {
+            let deltaX = 0
+            let deltaY = 0
+            let dragStartX = 0
+            let dragStartY = 0
+            let oldTop = 0
+            let oldLeft = 0
 
-        function dlgDragStart(e) {
-            e = e || window.event;
-            const d = e.target.closest("dialog")
-            e.preventDefault();
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            oldTop = parseInt(d.style.top)
-            oldLeft = parseInt(d.style.left)
-            if (isNaN(oldTop)) { oldTop = 0 }
-            if (isNaN(oldLeft)) { oldLeft = 0 }
-            document.addEventListener('mouseup', dlgDragClose);
-            document.addEventListener('mousemove', dlgDrag);
-        }
+            function dlgDragStart(e) {
+                e = e || window.event
+                const d = e.target.closest("dialog")
+                e.preventDefault()
+                dragStartX = e.clientX
+                dragStartY = e.clientY
+                oldTop = parseInt(d.style.top)
+                oldLeft = parseInt(d.style.left)
+                if (isNaN(oldTop)) {
+                    oldTop = 0
+                }
+                if (isNaN(oldLeft)) {
+                    oldLeft = 0
+                }
+                document.addEventListener("mouseup", dlgDragClose)
+                document.addEventListener("mousemove", dlgDrag)
+            }
 
-        function dlgDragClose(e) {
-            document.removeEventListener('mouseup', dlgDragClose);
-            document.removeEventListener('mousemove', dlgDrag);
-        }
+            function dlgDragClose(e) {
+                document.removeEventListener("mouseup", dlgDragClose)
+                document.removeEventListener("mousemove", dlgDrag)
+            }
 
-        function dlgDrag(e) {
-            e = e || window.event;
-            const d = e.target.closest("dialog")
-            e.preventDefault();
-            deltaX = dragStartX - e.clientX;
-            deltaY = dragStartY - e.clientY;
-            d.style.left = `${oldLeft - 2 * deltaX}px`
-            d.style.top = `${oldTop - 2 * deltaY}px`
-        }
+            function dlgDrag(e) {
+                e = e || window.event
+                const d = e.target.closest("dialog")
+                e.preventDefault()
+                deltaX = dragStartX - e.clientX
+                deltaY = dragStartY - e.clientY
+                d.style.left = `${oldLeft - 2 * deltaX}px`
+                d.style.top = `${oldTop - 2 * deltaY}px`
+            }
 
-        return dlgDragStart
-    })())
+            return dlgDragStart
+        })()
+    )
 }
 
 function logMsg(msg, level, outputMsg) {
@@ -1226,7 +1250,7 @@ function playSound() {
     var promise = audio.play()
     if (promise !== undefined) {
         promise
-            .then((_) => { })
+            .then((_) => {})
             .catch((error) => {
                 console.warn("browser blocked autoplay")
             })

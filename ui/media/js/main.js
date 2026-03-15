@@ -188,26 +188,13 @@ let embeddingsCollapsiblesBtn = document.querySelector("#embeddings-action-colla
 
 let makeImageBtn = document.querySelector("#makeImage")
 
-function isVisibleOption(option) {
-    if (!option || option.style.display === "none") {
-        return false
-    }
-
-    const parent = option.parentElement
-    if (parent && parent.tagName === "OPTGROUP" && parent.style.display === "none") {
-        return false
-    }
-
-    return true
-}
-
 function getSupportedSelectValue(selectElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex]
-    if (isVisibleOption(selectedOption)) {
+    if (isVisibleSelectOption(selectedOption)) {
         return selectElement.value
     }
 
-    const firstVisibleOption = Array.from(selectElement.options).find((option) => isVisibleOption(option))
+    const firstVisibleOption = Array.from(selectElement.options).find((option) => isVisibleSelectOption(option))
     return firstVisibleOption ? firstVisibleOption.value : selectElement.value
 }
 
